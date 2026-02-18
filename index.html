@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Photobooth Imut Ultimate 💖</title>
+
+<style>
+body{
+  margin:0;
+  background:linear-gradient(135deg,#fbcfe8,#fde68a);
+  font-family:"Comic Sans MS",Arial;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.app{
+  width:360px;
+  background:#fff;
+  border-radius:22px;
+  padding:14px;
+  box-shadow:0 15px 35px rgba(0,0,0,.25);
+  text-align:center;
+}
+video,canvas{width:100%;border-radius:18px}
+.controls{margin-top:6px}
+.row{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px}
+button,input{
+  padding:8px;
+  border-radius:12px;
+  border:none;
+  font-weight:bold;
+}
+button{cursor:pointer}
+.active{background:#fb7185;color:#fff}
+.frame, .sticker{background:#fde2e8}
+.capture{background:#fb7185;color:#fff;width:100%;margin-top:6px}
+.download{display:none;margin-top:6px;background:#ec4899;color:#fff;text-decoration:none;padding:8px;border-radius:12px}
+.timer{
+  position:absolute;
+  font-size:64px;
+  color:white;
+  text-shadow:0 0 10px black;
+}
+.preview{position:relative}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <h3>💖 Our Cute Photobooth 💖</h3>
+
+  <div class="preview">
+    <video id="video" autoplay playsinline></video>
+    <div id="timer" class="timer"></div>
+  </div>
+
+  <canvas id="canvas" hidden></canvas>
+
+  <input id="nameText" placeholder="Nama pacar 💕">
+
+  <div class="row">
+    <button class="frame active" onclick="setFrame('love',this)">💕 Love</button>
+    <button class="frame" onclick="setFrame('polaroid',this)">🖼️ Polaroid</button>
+    <button class="frame" onclick="setFrame('pastel',this)">🌸 Pastel</button>
+    <button class="frame" onclick="setFrame('star',this)">⭐ Star</button>
+  </div>
+
+  <div class="row">
+    <button class="sticker" onclick="toggleSticker('heart')">❤️</button>
+    <button class="sticker" onclick="toggleSticker('kiss')">💋</button>
+    <button class="sticker" onclick="toggleSticker('teddy')">🧸</button>
+    <button class="sticker" onclick="toggleSticker('star')">✨</button>
+  </div>
+
+  <button class="capture" onclick="startTimer()">📸 Ambil Foto</button>
+  <a id="download" class="download" download="photobooth-love.png">⬇ Download</a>
+</div>
+
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const timerEl = document.getElementById("timer");
+const download = document.getElementById("download");
+const nameInput = document.getElementById("nameText");
+
+let frame="love";
+let stickers={heart:false,kiss:false,teddy:false,star:false};
+
+navigator.mediaDevices.getUserMedia({video:true})
+  .then(s=>video.srcObject=s);
+
+function setFrame(f,btn){
+  frame=f;
+  document.querySelectorAll(".frame").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+function toggleSticker(s){stickers[s]=!stickers[s]}
+
+function drawFrame(w,h){
+  if(frame==="love"){
+    ctx.lineWidth=28;
+    ctx.strokeStyle="#fb7185";
+    ctx.strokeRect(14,14,w-28,h-28);
+  }
+  if(frame==="polaroid"){
+    ctx.fillStyle="white";
+    ctx.fillRect(0,h-120,w,120);
+  }
+  if(frame==="pastel"){
+    ctx.fillStyle="rgba(251,207,232,.6)";
+    ctx.fillRect(0,h-100,w,100);
+  }
+  if(frame==="star"){
+    ctx.strokeStyle="#fde68a";
+    ctx.lineWidth=20;
+    ctx.strokeRect(10,10,w-20,h-20);
+  }
+}
+
+function drawStickers(w,h){
+  ctx.font="40px serif";
+  if(stickers.heart) ctx.fillText("❤️",20,50);
+  if(stickers.kiss) ctx.fillText("💋",w-60,50);
+  if(stickers.teddy) ctx.fillText("🧸",20,h-20);
+  if(stickers.star) ctx.fillText("✨",w-60,h-20);
+}
+
+function drawText(w,h){
+  if(!nameInput.value) return;
+  ctx.font="bold 28px Comic Sans MS";
+  ctx.fillStyle="white";
+  ctx.shadowColor="black";
+  ctx.shadowBlur=6;
+  ctx.textAlign="center";
+  ctx.fillText(nameInput.value,w/2,h-40);
+  ctx.shadowBlur=0;
+}
+
+function startTimer(){
+  let t=3;
+  timerEl.textContent=t;
+  const i=setInterval(()=>{
+    t--;
+    if(t===0){
+      clearInterval(i);
+      timerEl.textContent="";
+      capture();
+    }else{
+      timerEl.textContent=t;
+    }
+  },1000);
+}
+
+function capture(){
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  drawFrame(canvas.width,canvas.height);
+  drawStickers(canvas.width,canvas.height);
+  drawText(canvas.width,canvas.height);
+
+  download.href=canvas.toDataURL("image/png");
+  download.style.display="block";
+}
+</script>
+</body>
+</html>
